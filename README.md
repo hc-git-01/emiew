@@ -13,7 +13,7 @@
   <img src="https://github.com/hc-git-01/emiew/blob/main/screenshots/book.png?raw=true" width="200" />
   <img src="https://github.com/hc-git-01/emiew/blob/main/screenshots/read.png?raw=true" width="200" />
   <img src="https://github.com/hc-git-01/emiew/blob/main/screenshots/download.png?raw=true" width="200" />
-  <img src="https://github.com/hc-git-01/emiew/blob/main/screenshots/config.png?raw=true" width="100" />
+  <img src="https://github.com/hc-git-01/emiew/blob/main/screenshots/config.png?raw=true" width="200" />
 </div>
 
 

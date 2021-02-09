@@ -1,0 +1,30 @@
+* {
+  box-sizing: border-box;
+  outline: none;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+body {
+  overflow: hidden;
+  color: #234;
+  font-size: 16px;
+  font-family: -apple-system, 'Microsoft Yahei', 'Droid Sans';
+}
+
+p {
+  margin: 0;
+  margin-bottom: 10px;
+}
+
+p:last-of-type {
+  margin-bottom: 0;
+}
+
+.active {
+  color: #0af;
+}

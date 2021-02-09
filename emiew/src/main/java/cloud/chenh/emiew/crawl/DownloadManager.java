@@ -5,9 +5,13 @@ import cloud.chenh.emiew.data.entity.Download;
 import cloud.chenh.emiew.data.entity.Image;
 import cloud.chenh.emiew.data.service.DownloadService;
 import cloud.chenh.emiew.data.service.ImageService;
+import cloud.chenh.emiew.exception.Image509Exception;
+import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.Book;
+import cloud.chenh.emiew.model.ImageFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -41,7 +45,7 @@ public class DownloadManager {
     @Autowired
     private DownloadService downloadService;
 
-    public void add(String url) throws IOException, IpBannedException {
+    public void add(String url) throws IOException, IpBannedException, Image509Exception, InvalidCookieException {
         Book book = bookCrawler.getBook(url, 0);
 
         Download download = new Download();
@@ -73,16 +77,17 @@ public class DownloadManager {
         autoDownloadImage();
     }
 
-    private String downloadCover(Download download) throws IOException {
-        byte[] bytes = imageCrawler.getImageDirectly(download.getCoverUrl());
+    private String downloadCover(Download download) throws IOException, Image509Exception {
+        ImageFile imageFile = imageCrawler.getImageDirectly(download.getCoverUrl());
 
         String path = DownloadConstants.ROOT_DIR +
                 download.getKey() +
                 "/" +
                 DownloadConstants.COVER_NAME +
-                DownloadConstants.IMAGE_EXTENSION;
+                "." +
+                FilenameUtils.getExtension(imageFile.getName());
 
-        FileUtils.writeByteArrayToFile(new File(path), bytes);
+        FileUtils.writeByteArrayToFile(new File(path), imageFile.getBytes());
 
         return path;
     }
@@ -185,13 +190,14 @@ public class DownloadManager {
         }
 
         try {
-            byte[] bytes = imageCrawler.getImageByIndex(image.getDownload().getUrl(), image.getIndex());
+            ImageFile imageFile = imageCrawler.getImageByIndex(image.getDownload().getUrl(), image.getIndex());
             String path = DownloadConstants.ROOT_DIR +
                     image.getDownload().getKey() +
                     "/" +
                     (image.getIndex() + 1) +
-                    DownloadConstants.IMAGE_EXTENSION;
-            FileUtils.writeByteArrayToFile(new File(path), bytes);
+                    "." +
+                    FilenameUtils.getExtension(imageFile.getName());
+            FileUtils.writeByteArrayToFile(new File(path), imageFile.getBytes());
             image.setPath(path);
             imageService.saveWithCheck(image);
         } catch (IOException e) {
@@ -201,7 +207,7 @@ public class DownloadManager {
                 onFail(image);
             }
             e.printStackTrace();
-        } catch (IpBannedException e) {
+        } catch (IpBannedException | Image509Exception | InvalidCookieException e) {
             onFail(image);
         }
     }
@@ -211,6 +217,7 @@ public class DownloadManager {
         Download download = image.getDownload();
         download.setStatus(Download.Status.FAILED);
         downloadService.saveWithCheck(download);
+        autoDownloadImage();
     }
 
 }

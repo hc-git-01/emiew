@@ -5,6 +5,7 @@ import cloud.chenh.emiew.data.entity.Download;
 import cloud.chenh.emiew.data.service.BlockService;
 import cloud.chenh.emiew.data.service.ConfigService;
 import cloud.chenh.emiew.data.service.DownloadService;
+import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.Book;
 import cloud.chenh.emiew.model.CustomPage;
@@ -46,7 +47,7 @@ public class GalleryCrawler {
             Integer minPages,
             Integer maxPages,
             Integer pageNumber
-    ) throws IOException, IpBannedException {
+    ) throws IOException, IpBannedException, InvalidCookieException {
 
         WebRequest request = new WebRequest(new URL(configService.getBaseUrl()));
         request.setRequestParameters(

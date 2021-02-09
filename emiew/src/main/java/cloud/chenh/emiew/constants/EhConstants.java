@@ -12,4 +12,6 @@ public class EhConstants {
 
     public static final Integer NORMAL_THUMB_PAGE_SIZE = 40;
 
+    public static final String IMAGE_509_PREFIX = "509";
+
 }

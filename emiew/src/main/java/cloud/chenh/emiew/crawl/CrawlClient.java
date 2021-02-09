@@ -3,6 +3,7 @@ package cloud.chenh.emiew.crawl;
 import cloud.chenh.emiew.constants.ConfigConstants;
 import cloud.chenh.emiew.constants.EhConstants;
 import cloud.chenh.emiew.data.service.ConfigService;
+import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.EhCookie;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
@@ -64,7 +65,7 @@ public class CrawlClient {
         client.getOptions().setDownloadImages(false);
         client.getOptions().setThrowExceptionOnScriptError(false);
         client.getOptions().setPrintContentOnFailingStatusCode(false);
-        client.getOptions().setTimeout(10000);
+        client.getOptions().setTimeout(60000);
 
         String proxyHost = configService.getProxyHost();
         Integer proxyPort = configService.getProxyPort();
@@ -98,19 +99,19 @@ public class CrawlClient {
         addCookie(EhConstants.EX_DOMAIN, name, value);
     }
 
-    public Document getDocument(String url) throws IOException, IpBannedException {
+    public Document getDocument(String url) throws IOException, IpBannedException, InvalidCookieException {
         return getDocument(new WebRequest(new URL(url)));
     }
 
-    public Document getDocument(WebRequest request) throws IOException, IpBannedException {
+    public Document getDocument(WebRequest request) throws IOException, IpBannedException, InvalidCookieException {
         return Jsoup.parse(getResponse(request));
     }
 
-    public String getResponse(String url) throws IOException, IpBannedException {
+    public String getResponse(String url) throws IOException, IpBannedException, InvalidCookieException {
         return getResponse(new WebRequest(new URL(url)));
     }
 
-    public String getResponse(WebRequest request) throws IOException, IpBannedException {
+    public String getResponse(WebRequest request) throws IOException, IpBannedException, InvalidCookieException {
         request.setCharset(StandardCharsets.UTF_8);
 
         for (int i = 0; i < REQUEST_RETRY; i++) {
@@ -118,8 +119,13 @@ public class CrawlClient {
             if (response.contains(BANNED_SIGN)) {
                 throw new IpBannedException();
             }
+            if (configService.getEhCookie().loaded() && StringUtils.isBlank(response)) {
+                throw new InvalidCookieException();
+            }
             if (response.contains(CHARSET_SIGN)) {
                 return response;
+            } else {
+                System.err.println(response);
             }
         }
         throw new IOException("Garbled html.");

@@ -1,6 +1,7 @@
 package cloud.chenh.emiew.crawl;
 
 import cloud.chenh.emiew.data.service.DownloadService;
+import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.Book;
 import cloud.chenh.emiew.util.CrawlParamsBuilder;
@@ -64,7 +65,7 @@ public class BookCrawler {
     }
 
     @Cacheable(value = GET_BOOK_CACHE_NAME, key = "#url + '@' + #pageNumber")
-    public Book getBook(String url, Integer pageNumber) throws IOException, IpBannedException {
+    public Book getBook(String url, Integer pageNumber) throws IOException, IpBannedException, InvalidCookieException {
         WebRequest request = new WebRequest(new URL(url));
         request.setRequestParameters(
                 CrawlParamsBuilder.create()
@@ -74,6 +75,7 @@ public class BookCrawler {
                         .get()
         );
         Document document = crawlClient.getDocument(request);
+
         Map<String, String> info = parseInfo(document.select("#gdd tr"));
         String parentUrl = parseParentUrl(document.selectFirst(".gdt2 a"));
         String title = document.selectFirst("#gn").text();

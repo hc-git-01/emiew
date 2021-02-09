@@ -57,6 +57,11 @@
         />
       </template>
 
+      <template slot="functions-button">
+        <div id="finished-books">{{ firstFetching ? '-' : finishedBooks }}</div>
+        <div id="total-books">{{ firstFetching ? '-' : totalBooks }}</div>
+      </template>
+
       <template slot="functions">
         <em-bar-button
           :class="{ active: sortBy === 'title' }"
@@ -288,6 +293,14 @@ export default {
       localStorage.setItem('download-sort', this.sortBy)
     },
   },
+  computed: {
+    finishedBooks() {
+      return this.books.filter((book) => book.finished).length
+    },
+    totalBooks() {
+      return this.books.length
+    },
+  },
 }
 </script>
 
@@ -359,6 +372,27 @@ export default {
 
 .book-tags .em-tag {
   margin: 5px 5px 0 0;
+}
+
+#finished-books {
+  min-width: 40px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 14px;
+  border-bottom: 1px solid #567;
+  overflow: visible;
+}
+
+.active #finished-books {
+  border-bottom: 1px solid #0af;
+}
+
+#total-books {
+  min-width: 40px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 14px;
+  overflow: visible;
 }
 
 .book-leave-active {

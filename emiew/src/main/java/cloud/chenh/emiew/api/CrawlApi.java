@@ -3,6 +3,7 @@ package cloud.chenh.emiew.api;
 import cloud.chenh.emiew.crawl.BookCrawler;
 import cloud.chenh.emiew.crawl.CrawlClient;
 import cloud.chenh.emiew.crawl.GalleryCrawler;
+import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.OperationResult;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
@@ -45,6 +46,8 @@ public class CrawlApi {
             return OperationResult.no("网络请求失败");
         } catch (IpBannedException e) {
             return OperationResult.no("本IP已被暂时封禁");
+        } catch (InvalidCookieException e) {
+            return OperationResult.no("该Cookie无法访问ExHentai");
         }
     }
 
@@ -65,6 +68,8 @@ public class CrawlApi {
         } catch (IOException e) {
             e.printStackTrace();
             return OperationResult.no("网络请求失败");
+        } catch (InvalidCookieException e) {
+            return OperationResult.no("该Cookie无法访问ExHentai");
         }
     }
 

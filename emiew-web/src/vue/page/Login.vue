@@ -31,7 +31,7 @@
       />
       <em-button @click="fetchLogin">登录</em-button>
 
-      <em-title icon="pen">直接填写Cookie</em-title>
+      <em-title icon="cookie-bite">直接填写Cookie</em-title>
       <em-input
         class="login-input"
         placeholder="ipb_pass_hash"
@@ -96,7 +96,7 @@ export default {
         .post('/login', this.form)
         .then((cookie) => {
           this.cookie = cookie
-          this.$toast('已更新Cookie')
+          this.$toast('已成功获取Cookie')
           this.fetchingLogin = false
         })
         .catch(() => {

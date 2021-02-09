@@ -1,0 +1,12 @@
+node_modules/
+dist/
+target/
+static/
+download/
+.idea/
+.vscode/
+
+*.iml
+package-lock.json
+h2.mv.db
+h2.trace.db

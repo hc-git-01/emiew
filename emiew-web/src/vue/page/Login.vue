@@ -10,7 +10,11 @@
         </p>
         <p>
           通过
-          <a href="https://forums.e-hentai.org/index.php?act=Reg" target="_blank">Registration</a>
+          <a
+            href="https://forums.e-hentai.org/index.php?act=Reg"
+            target="_blank"
+            >Registration</a
+          >
           进行注册。
         </p>
       </div>
@@ -42,6 +46,11 @@
         placeholder="ipb_member_id"
         v-model="cookie.ipbMemberId"
       />
+      <em-input
+        class="login-input"
+        placeholder="igneous"
+        v-model="cookie.igneous"
+      />
     </em-scroller>
 
     <em-bar>
@@ -68,6 +77,7 @@ export default {
       cookie: {
         ipbPassHash: '',
         ipbMemberId: '',
+        igneous: '',
       },
 
       fetchingLogin: false,
@@ -89,6 +99,7 @@ export default {
       this.cookie = {
         ipbPassHash: '',
         ipbMemberId: '',
+        igneous: '',
       }
 
       this.fetchingLogin = true
@@ -138,6 +149,7 @@ export default {
       this.cookie = {
         ipbPassHash: '',
         ipbMemberId: '',
+        igneous: '',
       }
       this.form = {
         username: '',

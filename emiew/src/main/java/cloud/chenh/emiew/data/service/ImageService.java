@@ -28,10 +28,4 @@ public class ImageService extends BaseService<Image> {
         return getRepository().findFirstByBookUrlAndIndex(bookUrl, index);
     }
 
-    public void saveWithCheck(Image image) {
-        if (findById(image.getId()) != null) {
-            save(image);
-        }
-    }
-
 }

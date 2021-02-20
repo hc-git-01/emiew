@@ -97,7 +97,7 @@ export default {
 <style scoped>
 #proxy-input-group {
   white-space: nowrap;
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
 }
 

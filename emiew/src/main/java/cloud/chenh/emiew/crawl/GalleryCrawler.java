@@ -8,9 +8,9 @@ import cloud.chenh.emiew.data.service.DownloadService;
 import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.Book;
-import cloud.chenh.emiew.model.CustomPage;
+import cloud.chenh.emiew.model.GalleryPage;
 import cloud.chenh.emiew.util.CrawlParamsBuilder;
-import com.gargoylesoftware.htmlunit.WebRequest;
+import cloud.chenh.emiew.util.EhUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -40,7 +39,7 @@ public class GalleryCrawler {
     @Autowired
     private DownloadService downloadService;
 
-    public CustomPage<Book> getGallery(
+    public GalleryPage getGallery(
             String searchValue,
             Integer categories,
             Integer rating,
@@ -49,31 +48,32 @@ public class GalleryCrawler {
             Integer pageNumber
     ) throws IOException, IpBannedException, InvalidCookieException {
 
-        WebRequest request = new WebRequest(new URL(configService.getBaseUrl()));
-        request.setRequestParameters(
-                CrawlParamsBuilder.create()
-                        .add("page", String.valueOf(pageNumber))
-                        .add("f_cats", String.valueOf(categories))
-                        .add("f_search", searchValue)
-                        .add("advsearch", String.valueOf(1))
-                        .add("f_sname", "on")
-                        .add("f_stags", "on")
-                        .add("f_sdesc", "on")
-                        .add("f_sr", "on")
-                        .add("f_srdd", String.valueOf(rating > 1 ? rating : 0))
-                        .add("f_sp", "on")
-                        .add("f_spf", String.valueOf(minPages))
-                        .add("f_spt", String.valueOf(maxPages))
-                        .get()
-        );
+        Document document = crawlClient.connect(configService.getBaseUrl())
+                .data(
+                        CrawlParamsBuilder.create()
+                                .add("page", pageNumber)
+                                .add("f_cats", categories)
+                                .add("f_search", searchValue)
+                                .add("advsearch", 1)
+                                .add("f_sname", "on")
+                                .add("f_stags", "on")
+                                .add("f_sdesc", "on")
+                                .add("f_sr", "on")
+                                .add("f_srdd", rating != null && rating > 1 ? rating : 0)
+                                .add("f_sp", "on")
+                                .add("f_spf", minPages)
+                                .add("f_spt", maxPages)
+                                .get()
+                ).get();
 
-        Document document = crawlClient.getDocument(request);
+        EhUtils.checkHtml(document);
 
         if (document.selectFirst(".ptt") == null) {
-            return new CustomPage<>(pageNumber, 0, new ArrayList<>());
+            return new GalleryPage(pageNumber, 0, new ArrayList<>());
         }
 
         Elements pageButtons = document.select(".ptt td");
+        Integer nextPage = parseNextPage(pageButtons);
         int totalPages = Integer.parseInt(pageButtons.get(pageButtons.size() - 2).selectFirst("a").text());
 
         List<Book> books = document.select(".itg > tbody > tr").stream()
@@ -82,13 +82,13 @@ public class GalleryCrawler {
                 .collect(Collectors.toList());
 
         List<String> downloads = downloadService.findByUrl(
-                books.parallelStream().map(Book::getUrl).collect(Collectors.toList())
-        ).parallelStream().map(Download::getUrl).collect(Collectors.toList());
-        books.parallelStream().forEach(book -> book.setDownloaded(downloads.contains(book.getUrl())));
+                books.stream().map(Book::getUrl).collect(Collectors.toList())
+        ).stream().map(Download::getUrl).collect(Collectors.toList());
+        books.forEach(book -> book.setDownloaded(downloads.contains(book.getUrl())));
 
         removeBlocked(books);
 
-        return new CustomPage<>(pageNumber, totalPages, books);
+        return new GalleryPage(pageNumber, nextPage, totalPages, books);
     }
 
     private Book parseBook(Element tr) {
@@ -140,7 +140,7 @@ public class GalleryCrawler {
     }
 
     private String getLanguageFromTags(List<Book.TagGroup> tagGroups) {
-        return StringUtils.capitalize(tagGroups.parallelStream()
+        return StringUtils.capitalize(tagGroups.stream()
                 .filter(group -> "language".equals(group.getName()))
                 .map(Book.TagGroup::getTags)
                 .flatMap(Collection::stream)
@@ -151,20 +151,29 @@ public class GalleryCrawler {
     private void removeBlocked(List<Book> books) {
         List<Block> blocks = blockService.findAll();
         books.removeIf(book ->
-                book.getTagGroups().parallelStream().anyMatch(group ->
-                        group.getTags().parallelStream().anyMatch(
+                book.getTagGroups().stream().anyMatch(group ->
+                        group.getTags().stream().anyMatch(
                                 // tag block
-                                tag -> blocks.parallelStream().anyMatch(
+                                tag -> blocks.stream().anyMatch(
                                         block -> group.getName().equals(block.getType()) &&
                                                 tag.equals(block.getValue())
                                 )
                         )
-                ) || blocks.parallelStream().anyMatch(
+                ) || blocks.stream().anyMatch(
                         // uploader block
                         block -> "uploader".equals(block.getType()) &&
                                 book.getUploader().equals(block.getValue())
                 )
         );
+    }
+
+    private Integer parseNextPage(Elements tds) {
+        for (int i = 0; i < tds.size(); i++) {
+            if (tds.get(i).hasClass("ptds") && i + 1 < tds.size() - 1) {
+                return Integer.parseInt(tds.get(i + 1).text()) - 1;
+            }
+        }
+        return null;
     }
 
 }

@@ -43,10 +43,4 @@ public class DownloadService extends BaseService<Download> {
         return getRepository().findAllByStatus(status);
     }
 
-    public void saveWithCheck(Download download) {
-        if (findById(download.getId()) != null) {
-            save(download);
-        }
-    }
-
 }

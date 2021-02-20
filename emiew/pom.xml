@@ -10,7 +10,7 @@
     </parent>
     <groupId>cloud.chenh</groupId>
     <artifactId>emiew</artifactId>
-    <version>0.0.1.preview</version>
+    <version>0.0.2.preview</version>
     <name>emiew</name>
     <description>E-Hentai mobile viewer</description>
 
@@ -48,10 +48,11 @@
             <artifactId>jsoup</artifactId>
             <version>1.13.1</version>
         </dependency>
+
         <dependency>
-            <groupId>net.sourceforge.htmlunit</groupId>
-            <artifactId>htmlunit</artifactId>
-            <version>2.46.0</version>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.75</version>
         </dependency>
 
         <dependency>

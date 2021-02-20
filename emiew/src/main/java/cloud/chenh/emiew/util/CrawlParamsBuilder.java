@@ -1,13 +1,11 @@
 package cloud.chenh.emiew.util;
 
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CrawlParamsBuilder {
 
-    private final List<NameValuePair> params = new ArrayList<>();
+    private final Map<String, String> params = new HashMap<>();
 
     private CrawlParamsBuilder() {
     }
@@ -16,12 +14,14 @@ public class CrawlParamsBuilder {
         return new CrawlParamsBuilder();
     }
 
-    public CrawlParamsBuilder add(String key, String val) {
-        params.add(new NameValuePair(key, val));
+    public CrawlParamsBuilder add(String key, Object val) {
+        if (key != null && val != null) {
+            params.put(key, String.valueOf(val));
+        }
         return this;
     }
 
-    public List<NameValuePair> get() {
+    public Map<String, String> get() {
         return params;
     }
 

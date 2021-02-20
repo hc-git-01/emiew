@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const request = axios.create({
   baseURL: Vue.prototype.$project.api,
-  timeout: 12000,
+  timeout: 30000,
 })
 
 const source = axios.CancelToken.source()
@@ -33,7 +33,7 @@ request.interceptors.response.use(
   (error) => {
     source.cancel()
     console.error(error)
-    Vue.prototype.$toast('后台程序异常', 'error')
+    Vue.prototype.$toast('请求超时', 'error')
     return Promise.reject(error)
   }
 )

@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import 'vue-awesome/icons'
 
-Vue.component('fa-icon', () => import('vue-awesome/components/Icon'))
+import FaIcon from 'vue-awesome/components/Icon'
+
+Vue.component('fa-icon', FaIcon)
 
 Vue.component('em-button', () => import('@/vue/comp/EmButton'))
 Vue.component('em-input', () => import('@/vue/comp/EmInput'))
@@ -13,3 +15,4 @@ Vue.component('em-bar', () => import('@/vue/comp/EmBar'))
 Vue.component('em-bar-button', () => import('@/vue/comp/EmBarButton'))
 Vue.component('em-main', () => import('@/vue/comp/EmMain'))
 Vue.component('em-scroller', () => import('@/vue/comp/EmScroller'))
+Vue.component('em-image', () => import('@/vue/comp/EmImage'))

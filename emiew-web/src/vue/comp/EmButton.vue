@@ -25,6 +25,7 @@ export default {
   border-radius: 5px;
   background-color: none;
   color: #fff;
+  fill: #fff;
   padding: 0 15px;
   transition: background-color 0.1s ease;
   vertical-align: top;
@@ -57,11 +58,20 @@ export default {
 }
 
 .em-button.gray {
-  color: #000;
+  color: #234;
+  fill: #234;
   background-color: #eee;
 }
 
 .em-button.gray:active {
   background-color: #ccc;
+}
+
+.em-button.github {
+  background-color: #24292e;
+}
+
+.em-button.github:active {
+  background-color: #02070c;
 }
 </style>

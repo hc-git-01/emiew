@@ -1,4 +1,4 @@
-import db from '@/data/db.text.json'
+import db from '@/data/tagTranslation.json'
 
 export function translateTagGroup(group) {
   let d = db.data.filter((d) => d.namespace === 'rows')[0].data[group]

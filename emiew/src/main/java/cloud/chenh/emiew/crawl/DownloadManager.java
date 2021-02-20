@@ -30,7 +30,9 @@ import java.util.stream.Collectors;
 @Component
 public class DownloadManager {
 
-    private final ExecutorService downloadPool = Executors.newFixedThreadPool(DownloadConstants.THREADS);
+    private static final Integer RETRY = 3;
+
+    private final ExecutorService downloadPool = Executors.newFixedThreadPool(6);
     private final List<Image> downloadingImages = new CopyOnWriteArrayList<>();
 
     @Autowired
@@ -54,7 +56,6 @@ public class DownloadManager {
         download.setCoverUrl(book.getCoverUrl());
         download.setCover(downloadCover(download));
         download.setCategory(book.getCategory());
-        download.setRating(book.getRating());
         download.setPages(book.getPages());
         download.setUploader(book.getUploader());
         download.setUploadTime(book.getUploadTime());
@@ -101,11 +102,11 @@ public class DownloadManager {
     }
 
     public void pause(List<Download> downloads) {
-        List<Image> images = downloads.parallelStream()
-                .flatMap(download -> download.getImages().parallelStream())
+        List<Image> images = downloads.stream()
+                .flatMap(download -> download.getImages().stream())
                 .collect(Collectors.toList());
         downloadingImages.removeAll(images);
-        downloads.parallelStream()
+        downloads.stream()
                 .filter(download -> !download.getFinished())
                 .forEach(download -> download.setStatus(Download.Status.PAUSED));
         downloadService.save(downloads);
@@ -121,8 +122,8 @@ public class DownloadManager {
     }
 
     public void resume(List<Download> downloads) {
-        downloads.parallelStream().forEach(download -> {
-            download.getImages().parallelStream().forEach(image -> {
+        downloads.forEach(download -> {
+            download.getImages().forEach(image -> {
                 if (StringUtils.isNotBlank(image.getPath()) && !new File(image.getPath()).exists()) {
                     image.setPath(null);
                 }
@@ -135,13 +136,28 @@ public class DownloadManager {
 
     public void remove(List<Long> ids) {
         List<Download> downloads = downloadService.findById(ids);
-        List<Image> images = downloads.parallelStream()
-                .flatMap(download -> download.getImages().parallelStream())
+        List<Image> images = downloads.stream()
+                .flatMap(download -> download.getImages().stream())
                 .collect(Collectors.toList());
         downloadingImages.removeAll(images);
         downloadService.delete(downloads);
-        downloads.parallelStream().forEach(download -> bookCrawler.clearCache(download.getUrl()));
+        downloads.forEach(download -> bookCrawler.clearCache(download.getUrl()));
         autoDownloadImage();
+    }
+
+    @Scheduled(fixedRate = 60 * 1000L)
+    @PostConstruct
+    public void autoFixCover() {
+        List<Download> downloads = downloadService.findAll();
+        downloads.stream().filter(download -> StringUtils.isNotBlank(download.getCoverUrl())).forEach(download -> {
+            if (StringUtils.isBlank(download.getCover()) || !new File(download.getCover()).exists()) {
+                try {
+                    download.setCover(downloadCover(download));
+                } catch (Exception ignored) {
+                }
+            }
+        });
+        downloadService.save(downloads);
     }
 
     @Scheduled(fixedRate = 60 * 1000L)
@@ -165,7 +181,7 @@ public class DownloadManager {
         }
 
         List<Download> downloads = downloadService.findAll();
-        List<String> keys = downloads.parallelStream().map(Download::getKey).collect(Collectors.toList());
+        List<String> keys = downloads.stream().map(Download::getKey).collect(Collectors.toList());
 
         for (File dir : dirs) {
             if (!keys.contains(dir.getName())) {
@@ -175,40 +191,33 @@ public class DownloadManager {
     }
 
     private void downloadImage(Image image) {
-        try {
-            downloadImage(image, DownloadConstants.RETRY);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        } finally {
-            downloadingImages.remove(image);
-        }
-    }
-
-    private void downloadImage(Image image, Integer retry) {
         if (!downloadingImages.contains(image)) {
             return;
         }
 
-        try {
-            ImageFile imageFile = imageCrawler.getImageByIndex(image.getDownload().getUrl(), image.getIndex());
-            String path = DownloadConstants.ROOT_DIR +
-                    image.getDownload().getKey() +
-                    "/" +
-                    (image.getIndex() + 1) +
-                    "." +
-                    FilenameUtils.getExtension(imageFile.getName());
-            FileUtils.writeByteArrayToFile(new File(path), imageFile.getBytes());
-            image.setPath(path);
-            imageService.saveWithCheck(image);
-        } catch (IOException e) {
-            if (retry > 0) {
-                downloadImage(image, retry - 1);
-            } else {
-                onFail(image);
+        for (int i = 0; i < RETRY; i++) {
+            try {
+                ImageFile imageFile = imageCrawler.getImageByIndex(image.getDownload().getUrl(), image.getIndex());
+                String path = DownloadConstants.ROOT_DIR +
+                        image.getDownload().getKey() +
+                        "/" +
+                        (image.getIndex() + 1) +
+                        "." +
+                        FilenameUtils.getExtension(imageFile.getName());
+                FileUtils.writeByteArrayToFile(new File(path), imageFile.getBytes());
+                image.setPath(path);
+                imageService.save(image);
+                return;
+            } catch (Exception e) {
+                if (i >= RETRY - 1) {
+                    e.printStackTrace();
+                    onFail(image);
+                }
+            } finally {
+                if (i >= RETRY - 1) {
+                    downloadingImages.remove(image);
+                }
             }
-            e.printStackTrace();
-        } catch (IpBannedException | Image509Exception | InvalidCookieException e) {
-            onFail(image);
         }
     }
 
@@ -216,7 +225,7 @@ public class DownloadManager {
         downloadingImages.removeIf(i -> i.getDownload().getId().equals(image.getDownload().getId()));
         Download download = image.getDownload();
         download.setStatus(Download.Status.FAILED);
-        downloadService.saveWithCheck(download);
+        downloadService.save(download);
         autoDownloadImage();
     }
 

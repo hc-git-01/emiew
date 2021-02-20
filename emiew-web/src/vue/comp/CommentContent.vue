@@ -75,7 +75,7 @@ export default {
   background-color: #f6f6f6;
   border-radius: 5px;
   border: 1px dashed #ccc;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-content * {

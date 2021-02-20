@@ -31,8 +31,11 @@ export default {
   watch: {
     message() {
       this.$nextTick(() => {
-        let left = this.$el.clientWidth / 2 + 'px'
-        this.$el.style.left = `calc(50vw - ${left})`
+        this.$el.style.left = 'unset'
+        this.$nextTick(() => {
+          let half = this.$el.clientWidth / 2 + 'px'
+          this.$el.style.left = `calc(50vw - ${half})`
+        })
       })
     },
   },
@@ -48,8 +51,9 @@ export default {
   color: #fff;
   background-color: #6c6;
   box-shadow: 0 1px 3px #0002;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   padding: 10px;
+  text-align: center;
 }
 
 .em-toast.warn {

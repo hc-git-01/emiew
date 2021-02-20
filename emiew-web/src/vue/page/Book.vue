@@ -5,11 +5,16 @@
     "
   >
     <em-scroller v-if="book" :gap="true">
-      <div id="thumbs" @scroll="handleThumbsScroll">
-        <img
+      <div
+        id="thumbs"
+        ref="thumbs"
+        @scroll="handleThumbsScroll"
+        @touchend="handleThumbsScroll"
+      >
+        <em-image
           v-for="thumb of thumbs"
           :key="thumb"
-          v-lazy="imagePrefix + thumb"
+          :src="imagePrefix + thumb"
         />
       </div>
 
@@ -150,15 +155,17 @@ import {
   translateTag,
   translateCategory,
 } from '@/script/util/translate'
+import EmImage from '../comp/EmImage.vue'
 
 export default {
   name: 'Book',
   components: {
     CommentContent,
+    EmImage,
   },
   mounted() {
     if (!this.$route.query.url) {
-      this.$push({ name: 'Gallery' })
+      this.$back()
     }
     this.fetchBook()
   },
@@ -265,11 +272,13 @@ export default {
           this.fetchingAddBlock = false
         })
     },
-    handleThumbsScroll(e) {
+    handleThumbsScroll() {
+      let thumbs = this.$refs.thumbs
+
       if (
         !this.fetchingBook &&
         (this.pageNumber + 1) * 40 < this.book.pages &&
-        e.target.scrollLeft + e.target.clientWidth >= e.target.scrollWidth
+        thumbs.scrollLeft + thumbs.clientWidth >= thumbs.scrollWidth - 1
       ) {
         this.pageNumber++
         this.fetchBook()
@@ -317,13 +326,14 @@ export default {
   margin: -10px;
   display: flex;
   align-items: center;
+  white-space: nowrap;
   height: 142px;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-#thumbs img {
-  max-height: 100%;
+.em-image {
+  height: 100%;
 }
 
 #title {

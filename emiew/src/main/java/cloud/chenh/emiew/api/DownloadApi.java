@@ -9,7 +9,6 @@ import cloud.chenh.emiew.model.OperationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -31,11 +30,11 @@ public class DownloadApi {
             return OperationResult.no("本IP已被暂时封禁");
         } catch (Image509Exception e) {
             return OperationResult.no("已达到图片请求上限");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return OperationResult.no("网络请求失败");
         } catch (InvalidCookieException e) {
             return OperationResult.no("该Cookie无法访问ExHentai");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return OperationResult.no("网络请求失败");
         }
     }
 

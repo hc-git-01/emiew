@@ -4,27 +4,31 @@
       <transition-group name="book">
         <div
           class="book"
-          :class="{ selected: book.selected }"
+          :class="{ selected: book.selected, selecting: selectMode }"
           v-for="book of books"
           :key="book.url"
           @click="handleBookClick(book)"
         >
-          <div class="book-cover">
-            <img v-lazy="coverPrefix + book.coverUrl" />
+          <div class="book-cover" @click.stop="handleCoverClick(book)">
+            <em-image :src="coverPrefix + book.coverUrl" />
           </div>
           <div class="book-details">
-            <div class="book-title" @click.stop="handleTitleClick(book)">
+            <div class="book-title">
               {{ book.title }}
             </div>
             <div class="book-tags">
+              <em-tag
+                size="small"
+                class="pages"
+                :icon="calcPagesIcon(book)"
+                :style="{
+                  backgroundColor: calcPagesColor(calcPagesIcon(book)),
+                }"
+              >
+                {{ book.progress }}/{{ book.pages }}
+              </em-tag>
               <em-tag size="small" icon="hashtag">
                 {{ book.category }}
-              </em-tag>
-              <em-tag size="small" icon="star">
-                {{ book.rating }}
-              </em-tag>
-              <em-tag size="small" :icon="calcPagesIcon(book)">
-                {{ book.progress }}/{{ book.pages }}
               </em-tag>
               <em-tag v-if="book.language" size="small" icon="globe">
                 {{ translateLanguage(book.language) }}
@@ -232,7 +236,7 @@ export default {
         })
       }
     },
-    handleTitleClick(book) {
+    handleCoverClick(book) {
       if (this.selectMode) {
         this.handleClickInSelectMode(book)
       } else {
@@ -267,6 +271,15 @@ export default {
       }
 
       return 'image'
+    },
+    calcPagesColor(icon) {
+      return {
+        pause: '#f80',
+        times: '#f66',
+        check: '#6c6',
+        download: '#0af',
+        image: '#0af',
+      }[icon]
     },
     cleanTitle(title) {
       return title
@@ -317,8 +330,11 @@ export default {
   background-color: #ddd;
 }
 
-.book.selected,
-.book.selected:active {
+.book.selected {
+  background-color: #eee;
+}
+
+.book.selecting:active {
   background-color: #eee;
 }
 
@@ -330,14 +346,15 @@ export default {
   height: 100%;
 }
 
-.book-cover img {
+.em-image {
   max-width: 100%;
   max-height: 100%;
   border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px #0002;
 }
 
 .book-details {
+  width: 0;
   flex: 1;
   margin-left: 10px;
   height: 100%;
@@ -347,8 +364,7 @@ export default {
   width: 100%;
   height: 60px;
   line-height: 20px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   font-weight: bold;
   overflow-wrap: break-word;
   overflow: hidden;
@@ -372,6 +388,11 @@ export default {
 
 .book-tags .em-tag {
   margin: 5px 5px 0 0;
+}
+
+.pages {
+  color: #fff;
+  fill: #fff;
 }
 
 #finished-books {

@@ -1,6 +1,7 @@
 package cloud.chenh.emiew.api;
 
 import cloud.chenh.emiew.crawl.CrawlClient;
+import cloud.chenh.emiew.crawl.GithubCrawler;
 import cloud.chenh.emiew.data.service.BlockService;
 import cloud.chenh.emiew.data.service.ConfigService;
 import cloud.chenh.emiew.model.OperationResult;
@@ -24,6 +25,9 @@ public class ConfigApi {
 
     @Autowired
     private CrawlClient crawlClient;
+
+    @Autowired
+    private GithubCrawler githubCrawler;
 
     @Value("${app.version}")
     private String appVersion;
@@ -70,6 +74,15 @@ public class ConfigApi {
         result.put("proxyEnabled", crawlClient.proxyEnabled());
 
         return OperationResult.ok(result);
+    }
+
+    @GetMapping("version/latest")
+    public OperationResult<?> getLatestVersion() {
+        try {
+            return OperationResult.ok(githubCrawler.getLatestVersion());
+        } catch (Exception e) {
+            return OperationResult.no("网络请求失败");
+        }
     }
 
 }

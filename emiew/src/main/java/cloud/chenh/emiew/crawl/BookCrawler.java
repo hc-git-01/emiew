@@ -5,7 +5,7 @@ import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.Book;
 import cloud.chenh.emiew.util.CrawlParamsBuilder;
-import com.gargoylesoftware.htmlunit.WebRequest;
+import cloud.chenh.emiew.util.EhUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -16,7 +16,6 @@ import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -59,24 +58,26 @@ public class BookCrawler {
         cache.getNativeCache()
                 .asMap()
                 .keySet()
-                .parallelStream()
+                .stream()
                 .filter(key -> ((String) key).split("@")[0].equals(url))
                 .forEach(cache::evict);
     }
 
     @Cacheable(value = GET_BOOK_CACHE_NAME, key = "#url + '@' + #pageNumber")
     public Book getBook(String url, Integer pageNumber) throws IOException, IpBannedException, InvalidCookieException {
-        WebRequest request = new WebRequest(new URL(url));
-        request.setRequestParameters(
-                CrawlParamsBuilder.create()
-                        .add("p", String.valueOf(pageNumber))
-                        .add("hc", String.valueOf(pageNumber == 0 ? 1 : 0)) // show all comments
-                        .add("inline_set", "ts_m") // normal thumbs
-                        .get()
-        );
-        Document document = crawlClient.getDocument(request);
+        Document document = crawlClient.connect(url)
+                .data(
+                        CrawlParamsBuilder.create()
+                                .add("p", pageNumber)
+                                .add("hc", pageNumber == 0 ? 1 : 0) // show all comments
+                                .add("inline_set", "ts_m") // normal thumbs
+                                .get()
+                ).get();
+
+        EhUtils.checkHtml(document);
 
         Map<String, String> info = parseInfo(document.select("#gdd tr"));
+
         String parentUrl = parseParentUrl(document.selectFirst(".gdt2 a"));
         String title = document.selectFirst("#gn").text();
         String subtitle = document.selectFirst("#gj").text();
@@ -137,7 +138,7 @@ public class BookCrawler {
 
     private Map<String, String> parseInfo(Elements trs) {
         Map<String, String> result = new HashMap<>();
-        trs.parallelStream().forEach(tr -> {
+        trs.forEach(tr -> {
             result.put(tr.selectFirst(".gdt1").text().split(":")[0], tr.selectFirst(".gdt2").text());
         });
         return result;
@@ -200,7 +201,6 @@ public class BookCrawler {
             }
         } catch (Throwable ignored) {
         }
-
         return "未知时间";
     }
 

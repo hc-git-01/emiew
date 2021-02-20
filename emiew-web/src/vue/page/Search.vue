@@ -10,9 +10,10 @@
           v-for="category of categories"
           :key="category.value"
           :style="{
-            backgroundColor: category.selected ? category.color : '#fff',
-            border: `1px solid ${category.color}`,
-            color: category.selected ? '#fff' : category.color,
+            backgroundColor: category.selected ? color[category.name] : '#fff',
+            border: `1px solid ${color[category.name]}`,
+            color: category.selected ? '#fff' : color[category.name],
+            fill: category.selected ? '#fff' : color[category.name],
           }"
           @click="category.selected ^= true"
         >
@@ -48,7 +49,8 @@
 </template>
 
 <script>
-import constants from '@/script/conf/constants'
+import constants from '@/data/constants'
+import categoryColor from '@/data/categoryColor'
 import { copyValue } from '@/script/util/object'
 import { translateCategory } from '@/script/util/translate'
 
@@ -68,64 +70,55 @@ export default {
         maxPages: constants.maxPages,
       },
 
+      color: categoryColor,
       categories: [
         {
           name: 'Doujinshi',
-          color: '#fc4e4e',
           value: 2,
           selected: true,
         },
         {
           name: 'Manga',
-          color: '#e78c1a',
           value: 4,
           selected: true,
         },
         {
           name: 'Artist CG',
-          color: '#c7bf07',
           value: 8,
           selected: true,
         },
         {
           name: 'Game CG',
-          color: '#1a9317',
           value: 16,
           selected: true,
         },
         {
           name: 'Western',
-          color: '#5dc13b',
           value: 512,
           selected: true,
         },
         {
           name: 'Non-H',
-          color: '#0f9ebd',
           value: 256,
           selected: true,
         },
         {
           name: 'Image Set',
-          color: '#2756aa',
           value: 32,
           selected: true,
         },
         {
           name: 'Cosplay',
-          color: '#8800c3',
           value: 64,
           selected: true,
         },
         {
           name: 'Asian Porn',
-          color: '#b452a5',
           value: 128,
           selected: true,
         },
         {
           name: 'Misc',
-          color: '#707070',
           value: 1,
           selected: true,
         },
@@ -161,7 +154,7 @@ export default {
     },
     translateCategory(category) {
       return translateCategory(category)
-    }
+    },
   },
 }
 </script>
@@ -183,6 +176,7 @@ export default {
 .rating {
   margin-right: 10px;
   color: #ffd700;
+  fill: #ffd700;;
 }
 
 .pages-input {

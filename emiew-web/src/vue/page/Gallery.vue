@@ -1,40 +1,55 @@
 <template>
   <em-main :loading="fetchingBooks">
-    <em-scroller @scroll="handleScroll">
+    <em-scroller
+      ref="scroller"
+      @scroll="handleScroll"
+      @touchend.native="handleScroll"
+    >
       <div
         class="book"
-        v-for="book of books"
+        v-for="(book, index) of books"
         :key="book.url"
         @click="$push({ name: 'Book', query: { url: book.url } })"
       >
-        <div class="book-cover">
-          <img v-lazy="coverPrefix + book.coverUrl" />
-        </div>
-        <div class="book-details">
-          <div class="book-title" @click="$emit('title-click', $event)">
-            {{ book.title }}
+        <template v-if="index >= bookLoadFrom && index < bookLoadTo">
+          <div class="book-cover">
+            <em-image :src="coverPrefix + book.coverUrl" />
           </div>
-          <div class="book-tags">
-            <em-tag size="small" icon="hashtag">
-              {{ translateCategory(book.category) }}
-            </em-tag>
-            <em-tag size="small" icon="star">
-              {{ book.rating }}
-            </em-tag>
-            <em-tag size="small" :icon="book.downloaded ? 'download' : 'image'">
-              {{ book.pages }}
-            </em-tag>
-            <em-tag v-if="book.language" size="small" icon="globe">
-              {{ translateLanguage(book.language) }}
-            </em-tag>
-            <em-tag size="small" icon="user">
-              {{ book.uploader }}
-            </em-tag>
-            <em-tag size="small" icon="clock">
-              {{ book.uploadTime }}
-            </em-tag>
+
+          <div class="book-details">
+            <div class="book-title" @click="$emit('title-click', $event)">
+              {{ book.title }}
+            </div>
+            <div class="book-tags">
+              <em-tag
+                size="small"
+                icon="hashtag"
+                class="category"
+                :style="{ backgroundColor: color[book.category] }"
+              >
+                {{ translateCategory(book.category) }}
+              </em-tag>
+              <em-tag
+                size="small"
+                :icon="book.downloaded ? 'download' : 'image'"
+              >
+                {{ book.pages }}
+              </em-tag>
+              <em-tag size="small" icon="star">
+                {{ book.rating }}
+              </em-tag>
+              <em-tag v-if="book.language" size="small" icon="globe">
+                {{ translateLanguage(book.language) }}
+              </em-tag>
+              <em-tag size="small" icon="user">
+                {{ book.uploader }}
+              </em-tag>
+              <em-tag size="small" icon="clock">
+                {{ book.uploadTime }}
+              </em-tag>
+            </div>
           </div>
-        </div>
+        </template>
       </div>
     </em-scroller>
 
@@ -50,7 +65,7 @@
       </template>
 
       <template slot="functions-button">
-        <div id="page-number">{{ params.pageNumber + 1 }}</div>
+        <div id="page-number">{{ currPage + 1 }}</div>
         <div id="total-pages">{{ totalPages || '-' }}</div>
       </template>
 
@@ -80,7 +95,8 @@
 </template>
 
 <script>
-import constants from '@/script/conf/constants'
+import constants from '@/data/constants'
+import categoryColor from '@/data/categoryColor'
 import { copyValue } from '@/script/util/object'
 import { translateLanguage, translateCategory } from '@/script/util/translate'
 
@@ -95,6 +111,8 @@ export default {
       coverPrefix: `${this.$project.api}image/cover?url=`,
 
       books: [],
+      currPage: 0,
+      nextPage: 0,
       totalPages: 0,
 
       params: {
@@ -111,6 +129,11 @@ export default {
 
       jumpPage: 0,
       pageModalShow: false,
+
+      color: categoryColor,
+
+      bookLoadFrom: 0,
+      bookLoadTo: 0,
     }
   },
   methods: {
@@ -122,19 +145,19 @@ export default {
       this.$axios
         .get('/crawl/gallery', this.params)
         .then((page) => {
+          this.currPage = page.pageNumber
+          this.nextPage = page.nextPage
           this.totalPages = page.totalPages
           this.books = this.books.concat(
             page.elements.filter(
               (e) => this.books.map((book) => book.url).indexOf(e.url) < 0
             )
           )
+          this.hideBook()
           this.fetchingBooks = false
         })
         .catch(() => {
-          if (this.pageTurned) {
-            this.pageNumber--
-            this.pageTurned = false
-          }
+          this.params.pageNumber = this.currPage
           this.fetchingBooks = false
         })
     },
@@ -143,16 +166,25 @@ export default {
       this.pageTurned = false
       this.fetchBooks()
     },
-    handleScroll(e) {
+    handleScroll() {
+      let scroller = this.$refs.scroller.$el
+
       if (
         !this.fetchingBooks &&
         this.params.pageNumber < this.totalPages - 1 &&
-        e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 70
+        scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 71
       ) {
-        this.pageTurned = true
-        this.params.pageNumber++
+        this.params.pageNumber = this.nextPage || this.params.pageNumber + 1
         this.fetchBooks()
       }
+
+      this.hideBook()
+    },
+    hideBook() {
+      let scrollTop = this.$refs.scroller.$el.scrollTop
+      let screenHeight = window.innerHeight
+      this.bookLoadFrom = Math.floor((scrollTop - 0.5 * screenHeight) / 162)
+      this.bookLoadTo = Math.ceil((scrollTop + 1.5 * screenHeight) / 162)
     },
     handleJumpPage() {
       if (
@@ -189,6 +221,7 @@ export default {
 <style scoped>
 .book {
   display: flex;
+  flex-flow: nowrap;
   height: 162px;
   padding: 10px;
   overflow: hidden;
@@ -207,14 +240,15 @@ export default {
   height: 100%;
 }
 
-.book-cover img {
+.em-image {
   max-width: 100%;
   max-height: 100%;
   border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px #0002;
 }
 
 .book-details {
+  width: 0;
   flex: 1;
   margin-left: 10px;
   height: 100%;
@@ -224,8 +258,7 @@ export default {
   width: 100%;
   height: 60px;
   line-height: 20px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   font-weight: bold;
   overflow-wrap: break-word;
   overflow: hidden;
@@ -249,6 +282,11 @@ export default {
 
 .book-tags .em-tag {
   margin: 5px 5px 0 0;
+}
+
+.category {
+  color: #fff;
+  fill: #fff;
 }
 
 #search-value {

@@ -1,14 +1,8 @@
 <template>
   <div class="em-bar">
     <transition name="em-bar-tools" appear>
-      <div v-show="toolsShow" class="em-bar-tools">
-        <em-bar-button
-          icon="arrow-left"
-          @click="
-            toolsShow = false
-            $back()
-          "
-        />
+      <div class="em-bar-tools">
+        <em-bar-button icon="arrow-left" @click="$back" />
         <div class="em-bar-center">
           <slot />
         </div>
@@ -38,11 +32,9 @@ export default {
   name: 'EmBar',
   mounted() {
     this.bindTouch()
-    this.toolsShow = true
   },
   data() {
     return {
-      toolsShow: false,
       functionsShow: false,
     }
   },
@@ -119,13 +111,11 @@ export default {
   overflow: hidden;
 }
 
-.em-bar-tools-enter-active,
-.em-bar-tools-leave-active {
+.em-bar-tools-enter-active {
   transition: transform 0.4s ease;
 }
 
-.em-bar-tools-enter,
-.em-bar-tools-leave-to {
+.em-bar-tools-enter {
   transform: translateY(70px);
 }
 

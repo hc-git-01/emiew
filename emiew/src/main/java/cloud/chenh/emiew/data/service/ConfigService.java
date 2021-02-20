@@ -44,7 +44,7 @@ public class ConfigService extends BaseService<Config> {
     }
 
     public Map<String, Object> get() {
-        return findAll().parallelStream()
+        return findAll().stream()
                 .collect(Collectors.toMap(Config::getKey, Config::getValue));
     }
 
@@ -78,15 +78,20 @@ public class ConfigService extends BaseService<Config> {
         setInt(ConfigConstants.PROXY_PORT, port);
     }
 
-    public void setEhCookie(String ipbPassHash, String ipbMemberId) {
+    public void setEhCookie(String ipbPassHash, String ipbMemberId, String igneous) {
         set(ConfigConstants.IPB_PASS_HASH, ipbPassHash);
         set(ConfigConstants.IPB_MEMBER_ID, ipbMemberId);
+        set(ConfigConstants.IGNEOUS, igneous);
 
         crawlClient.init();
     }
 
     public EhCookie getEhCookie() {
-        return new EhCookie(get(ConfigConstants.IPB_PASS_HASH), get(ConfigConstants.IPB_MEMBER_ID));
+        return new EhCookie(
+                get(ConfigConstants.IPB_PASS_HASH),
+                get(ConfigConstants.IPB_MEMBER_ID),
+                get(ConfigConstants.IGNEOUS)
+        );
     }
 
 }

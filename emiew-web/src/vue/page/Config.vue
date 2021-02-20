@@ -1,5 +1,7 @@
 <template>
-  <em-main :loading="fetchingDisplay || fetchingReloadProxy">
+  <em-main
+    :loading="fetchingDisplay || fetchingReloadProxy || fetchingCheckUpdate"
+  >
     <em-scroller :gap="true">
       <em-title icon="comment">注意</em-title>
       <div class="config-text">
@@ -15,6 +17,10 @@
         </p>
       </div>
 
+      <em-button type="github" @click="handleGithubClick">
+        首页
+      </em-button>
+
       <em-title icon="paper-plane">代理</em-title>
       <div class="config-text">
         <span>工作模式: </span>
@@ -28,7 +34,12 @@
       </div>
       <div class="config-text">
         <span>启用状态: </span>
-        <span :style="{ color: display.proxyEnabled ? '#6a6' : '#f66' }">
+        <span
+          :style="{
+            color: display.proxyEnabled ? '#6a6' : '#f66',
+            fill: display.proxyEnabled ? '#6a6' : '#f66',
+          }"
+        >
           {{ display.proxyEnabled ? '已启用' : '未启用' }}
           <fa-icon
             v-if="display"
@@ -79,13 +90,28 @@
         <span v-if="display">{{ display.appVersion }}</span>
         <fa-icon v-else name="circle-notch" spin />
       </div>
-      <!-- <em-button icon="cloud-download-alt" type="blue" text="检查" /> -->
-      <!-- <em-button
-        id="github-button"
-        icon="brands/github"
-        type="github"
-        text="前往"
-      /> -->
+      <div class="config-text">
+        <span>最新版本: </span>
+        <span
+          v-if="display"
+          :style="{
+            color: !latestVersion
+              ? '#234'
+              : display.appVersion === latestVersion
+              ? '#6a6'
+              : '#f66',
+          }"
+        >
+          {{ latestVersion || '待检查' }}
+        </span>
+        <fa-icon v-else name="circle-notch" spin />
+      </div>
+      <em-button icon="cloud-download-alt" @click="fetchCheckUpdate">
+        检查
+      </em-button>
+      <em-button type="github" @click="handleReleaseClick">
+        前往
+      </em-button>
     </em-scroller>
 
     <em-bar>
@@ -105,6 +131,9 @@ export default {
       display: '',
       fetchingDisplay: false,
       fetchingReloadProxy: false,
+      fetchingCheckUpdate: false,
+
+      latestVersion: '',
     }
   },
   methods: {
@@ -138,6 +167,28 @@ export default {
         .catch(() => {
           this.fetchingReloadProxy = false
         })
+    },
+    fetchCheckUpdate() {
+      if (this.fetchingCheckUpdate) {
+        return
+      }
+
+      this.fetchingCheckUpdate = true
+      this.$axios
+        .get('/config/version/latest')
+        .then((version) => {
+          this.latestVersion = version
+          this.fetchingCheckUpdate = false
+        })
+        .catch(() => {
+          this.fetchingCheckUpdate = false
+        })
+    },
+    handleGithubClick() {
+      window.open('https://github.com/hc-git-01/emiew/', '_blank')
+    },
+    handleReleaseClick() {
+      window.open('https://github.com/hc-git-01/emiew/releases', '_blank')
     },
   },
 }

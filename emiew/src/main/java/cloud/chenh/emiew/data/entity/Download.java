@@ -26,8 +26,6 @@ public class Download extends BaseEntity {
 
     private String category;
 
-    private Double rating;
-
     private Integer pages;
 
     private String uploader;
@@ -60,11 +58,11 @@ public class Download extends BaseEntity {
             return false;
         }
 
-        return images.parallelStream().noneMatch(image -> StringUtils.isBlank(image.getPath()));
+        return images.stream().noneMatch(image -> StringUtils.isBlank(image.getPath()));
     }
 
     public Long getProgress() {
-        return images.parallelStream()
+        return images.stream()
                 .filter(image -> StringUtils.isNotBlank(image.getPath()))
                 .count();
     }

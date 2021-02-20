@@ -6,14 +6,11 @@ import cloud.chenh.emiew.crawl.GalleryCrawler;
 import cloud.chenh.emiew.exception.InvalidCookieException;
 import cloud.chenh.emiew.exception.IpBannedException;
 import cloud.chenh.emiew.model.OperationResult;
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
 
 @RestController
 @RequestMapping("crawl")
@@ -41,13 +38,13 @@ public class CrawlApi {
             return OperationResult.ok(
                     galleryCrawler.getGallery(searchValue, categories, rating, minPages, maxPages, pageNumber)
             );
-        } catch (IOException e) {
-            e.printStackTrace();
-            return OperationResult.no("网络请求失败");
         } catch (IpBannedException e) {
             return OperationResult.no("本IP已被暂时封禁");
         } catch (InvalidCookieException e) {
             return OperationResult.no("该Cookie无法访问ExHentai");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return OperationResult.no("网络请求失败");
         }
     }
 
@@ -62,14 +59,11 @@ public class CrawlApi {
             );
         } catch (IpBannedException e) {
             return OperationResult.no("本IP已被暂时封禁");
-        } catch (FailingHttpStatusCodeException e) {
-            e.printStackTrace();
-            return OperationResult.no("找不到该本子");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return OperationResult.no("网络请求失败");
         } catch (InvalidCookieException e) {
             return OperationResult.no("该Cookie无法访问ExHentai");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return OperationResult.no("网络请求失败");
         }
     }
 

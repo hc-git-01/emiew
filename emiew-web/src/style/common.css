@@ -2,16 +2,18 @@
   box-sizing: border-box;
   outline: none;
   color: inherit;
+  fill: inherit;
   font-size: inherit;
   font-weight: inherit;
   font-family: inherit;
   appearance: none;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-tap-highlight-color: #0000;
 }
 
 body {
   overflow: hidden;
   color: #234;
+  fill: #234;
   font-size: 16px;
   font-family: -apple-system, 'Microsoft Yahei', 'Droid Sans';
 }
